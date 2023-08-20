@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CayoteRoadRunners.Models
 {
@@ -12,5 +13,9 @@ namespace CayoteRoadRunners.Models
         public string VideoLink { get; set; }
         // one to one relationship reference
         public CategoryItem CategoryItem { get; set; }
+        [NotMapped]
+        public int CatItemId { get; set; }
+        [NotMapped]
+        public int CategoryId { get; set; }
     }
 }

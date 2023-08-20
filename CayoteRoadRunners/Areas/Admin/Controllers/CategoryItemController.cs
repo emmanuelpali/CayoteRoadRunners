@@ -35,7 +35,7 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
                                                  MediaTypeId = catItem.MediaTypeId,
                                                  CategoryId = categoryId
                                              }).ToListAsync();
-            ViewBag.CategoryId = categoryId;
+            ViewBag.CategoryId = categoryId; 
               return _context.CategoryItem != null ? 
                           View(list) :
                           Problem("Entity set 'ApplicationDbContext.CategoryItem'  is null.");
