@@ -21,9 +21,14 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
         }
 
         // GET: Admin/Content/Create
-        public IActionResult Create()
+        public IActionResult Create(int categoryItemId, int categoryId)
         {
-            return View();
+            Content content = new Content
+            {
+                CategoryId = categoryId,
+                CatItemId = categoryItemId,
+            };
+            return View(content);
         }
 
         // POST: Admin/Content/Create
@@ -31,26 +36,31 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,HTMLContent,VideoLink")] Content content)
+        public async Task<IActionResult> Create([Bind("Id,Title,HTMLContent,VideoLink,CatItemId,CategoryId")] Content content)
         {
             if (ModelState.IsValid)
             {
+                content.CategoryItem = await _context.CategoryItem.FindAsync(content.CatItemId);
                 _context.Add(content);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), "CategoryItem", new {categoryId=content.CategoryId});
             }
             return View(content);
         }
 
         // GET: Admin/Content/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        // GET: Admin/Content/Edit/5
+        public async Task<IActionResult> Edit(int categoryItemId, int categoryId)
         {
-            if (id == null || _context.Content == null)
+            if (categoryItemId == 0)
             {
                 return NotFound();
             }
 
-            var content = await _context.Content.FindAsync(id);
+            var content = await _context.Content.SingleOrDefaultAsync(item => item.CategoryItem.Id == categoryItemId);
+
+            content.CategoryId = categoryId;
+
             if (content == null)
             {
                 return NotFound();
@@ -63,7 +73,7 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,HTMLContent,VideoLink")] Content content)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,HTMLContent,VideoLink,CategoryId")] Content content)
         {
             if (id != content.Id)
             {
@@ -88,10 +98,11 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), "CategoryItem", new { categoryId = content.CategoryId });
             }
             return View(content);
         }
+
         private bool ContentExists(int id)
         {
           return (_context.Content?.Any(e => e.Id == id)).GetValueOrDefault();

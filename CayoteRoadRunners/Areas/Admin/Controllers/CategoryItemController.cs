@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using CayoteRoadRunners.Data;
 using CayoteRoadRunners.Models;
 using CayoteRoadRunners.Extensions;
+using NuGet.ContentModel;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace CayoteRoadRunners.Areas.Admin.Controllers
 {
@@ -25,6 +27,10 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
         public async Task<IActionResult> Index(int categoryId)
         {
             List<CategoryItem> list = await (from catItem in _context.CategoryItem
+                                             join ContentItem in _context.Content
+                                             on catItem.Id equals ContentItem.CategoryItem.Id
+                                             into gj
+                                             from subContent in gj.DefaultIfEmpty()
                                              where catItem.CategoryId == categoryId
                                              select new CategoryItem
                                              {
@@ -33,7 +39,8 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
                                                  Description = catItem.Description,
                                                  DateTimeItemReleased = catItem.DateTimeItemReleased,
                                                  MediaTypeId = catItem.MediaTypeId,
-                                                 CategoryId = categoryId
+                                                 CategoryId = categoryId,
+                                                 ContentId = (subContent != null) ? subContent.Id : 0
                                              }).ToListAsync();
             ViewBag.CategoryId = categoryId; 
               return _context.CategoryItem != null ? 
@@ -62,7 +69,7 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
         // GET: Admin/CategoryItem/Create
         public async Task<IActionResult> Create(int categoryId)
         {
-            List<MediaType> mediaTypes = await _context.MediaType.ToListAsync();
+            List<Models.MediaType> mediaTypes = await _context.MediaType.ToListAsync();
             CategoryItem categoryItem = new CategoryItem
             {
                 CategoryId = categoryId,
@@ -84,6 +91,8 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index), new {categoryId = categoryItem.CategoryId});
             }
+            List<Models.MediaType> mediaTypes = await _context.MediaType.ToListAsync();
+            categoryItem.MediaTypes = mediaTypes.ConvertToSelectList(categoryItem.MediaTypeId);
             return View(categoryItem);
         }
 
@@ -95,7 +104,7 @@ namespace CayoteRoadRunners.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            List<MediaType> mediaTypes = await _context.MediaType.ToListAsync();
+            List<Models.MediaType> mediaTypes = await _context.MediaType.ToListAsync();
             var categoryItem = await _context.CategoryItem.FindAsync(id);
             if (categoryItem == null)
             {
